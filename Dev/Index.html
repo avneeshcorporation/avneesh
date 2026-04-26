@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billix - Professional Invoice Generator</title>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <!-- jsPDF and AutoTable libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Dynamic Floating Background -->
+    <ul class="dynamic-background">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+    </ul>
+
+    <div class="app-container">
+        <!-- Minimalist Rich Text Formatting Toolbar -->
+        <div id="formattingToolbar" class="formatting-toolbar minimalist">
+            <!-- Tt: Text Style Dropdown -->
+            <div class="toolbar-group dropdown-group" id="ttGroup">
+                <button type="button" class="toolbar-btn minimalist-btn" title="Text Style"><span>Tt</span></button>
+                <div class="toolbar-dropdown">
+                    <button type="button" class="dropdown-cmd" data-cmd="formatBlock" data-val="p">Normal</button>
+                    <button type="button" class="dropdown-cmd" data-cmd="formatBlock" data-val="H1" style="font-weight:bold; font-size:1.1em;">Heading 1</button>
+                    <button type="button" class="dropdown-cmd" data-cmd="formatBlock" data-val="H2" style="font-weight:bold;">Heading 2</button>
+                </div>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <button type="button" class="toolbar-btn minimalist-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+            <button type="button" class="toolbar-btn minimalist-btn" data-cmd="italic" title="Italic"><i style="font-family:serif;">I</i></button>
+            <button type="button" class="toolbar-btn minimalist-btn" data-cmd="underline" title="Underline"><u>U</u></button>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- A: Color Pickers -->
+            <div class="toolbar-group dropdown-group" id="colorGroup">
+                <button type="button" class="toolbar-btn minimalist-btn" title="Colors" style="position: relative;">
+                    <span style="font-weight:600;">A</span>
+                    <div id="currentColorIndicator" style="position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:12px; height:3px; background:var(--text-main); border-radius:2px;"></div>
+                </button>
+                <div class="toolbar-dropdown">
+                    <!-- Native Pickers visually hidden but triggered via JS -->
+                    <label class="dropdown-cmd color-label">
+                        Text Color
+                        <input type="color" id="foreColorPicker" class="native-picker" value="#000000">
+                    </label>
+                    <label class="dropdown-cmd color-label">
+                        Highlight
+                        <input type="color" id="backColorPicker" class="native-picker" value="#ffffff">
+                    </label>
+                </div>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Settings Menu -->
+            <div class="toolbar-group dropdown-group" id="formattingMenuGrp">
+                <button type="button" class="toolbar-btn minimalist-btn" title="Formatting Menu">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:2px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="toolbar-dropdown right-align">
+                    <div class="dropdown-section">Alignment</div>
+                    <div class="dropdown-row">
+                        <button type="button" class="dropdown-icon-btn" data-cmd="justifyLeft" title="Left">⫷</button>
+                        <button type="button" class="dropdown-icon-btn" data-cmd="justifyCenter" title="Center">≣</button>
+                        <button type="button" class="dropdown-icon-btn" data-cmd="justifyRight" title="Right">⫸</button>
+                    </div>
+                    
+                    <div class="dropdown-section">Lists</div>
+                    <div class="dropdown-row list-row">
+                        <button type="button" class="dropdown-cmd" data-cmd="insertUnorderedList">• Bullets</button>
+                        <button type="button" class="dropdown-cmd" data-cmd="insertOrderedList">1. Numbers</button>
+                    </div>
+
+                    <div class="dropdown-section">Spacing</div>
+                    <div class="dropdown-row spacing-row">
+                        <button type="button" class="dropdown-cmd spacing-btn" data-spacing="1">Single</button>
+                        <button type="button" class="dropdown-cmd spacing-btn" data-spacing="1.5">1.5</button>
+                        <button type="button" class="dropdown-cmd spacing-btn" data-spacing="2">Double</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="logo-container" style="display: flex; align-items: center; gap: 0.8rem;">
+                <svg class="company-logo" width="55" height="55" viewBox="0 0 100 100" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <!-- Base Slot -->
+                    <rect x="25" y="80" width="55" height="8" rx="4" fill="#013A0E" />
+                    <!-- Back Paper (Darkest) -->
+                    <path d="M22 35 Q28 65 32 80 L62 80 Q59 55 64 32 Z" fill="#116D08" />
+                    <!-- Middle Paper -->
+                    <path d="M33 32 Q36 60 38 80 L72 80 Q73 55 84 38 Z" fill="#299E13" />
+                    <!-- Front Paper (Lightest, with notches) -->
+                    <path
+                        d="M43 38 C43 38 46 45 52 46 C57 47 62 44 62 44 L87 54 C87 54 83 60 81 65 C79 71 85 75 85 75 Q75 80 72 82 L42 82 Q48 65 43 38 Z"
+                        fill="#A8EB66" />
+                </svg>
+                <div>
+                    <h1 class="company-name" style="color: var(--primary);">BILLIX</h1>
+                    <p class="tagline" style="color: var(--primary-light); font-size: 0.85rem; font-weight: 600;">Since
+                        2026</p>
+                </div>
+            </div>
+            <div class="action-buttons" style="display: flex; gap: 10px; align-items: center;">
+                <button id="darkModeBtn" type="button" class="btn btn-secondary"
+                    style="padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                    <span id="darkModeIcon" style="font-size: 1.1rem; line-height: 1;">🌙</span>
+                </button>
+                <div class="dropdown">
+                    <button id="downloadBtn" type="button" class="btn btn-primary dropdown-toggle">
+                        Download PDF <span class="chevron">▼</span>
+                    </button>
+                    <div id="downloadMenu" class="dropdown-menu">
+                        <button type="button" class="dropdown-item" data-copy="ORIGINAL FOR RECIPIENT">Original for
+                            Recipient</button>
+                        <button type="button" class="dropdown-item" data-copy="DUPLICATE FOR TRANSPORTER">Duplicate for
+                            Transporter</button>
+                        <button type="button" class="dropdown-item" data-copy="SUPPLIER COPY">Supplier Copy</button>
+                        <hr class="dropdown-divider">
+                        <button type="button" class="dropdown-item" data-copy="ALL">Combined PDF (All 3 Copies)</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="workspace">
+            <!-- Left Pane: Input Form -->
+            <aside class="form-pane">
+                <form id="invoiceForm">
+                    <!-- Seller Details Section -->
+                    <section class="card">
+                        <h2 class="section-title">Seller Details</h2>
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="sellerName">Company Name</label>
+                                <input type="text" id="sellerName" value="BILLIX" data-sync="seller-name">
+                            </div>
+                            <div class="input-group">
+                                <label for="dispatchFrom">Dispatch From</label>
+                                <input type="text" id="dispatchFrom" value="Khalapur Dist. Raigad Maharashtra (410203)"
+                                    data-sync="dispatch-from">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="sellerAddress">Address</label>
+                            <div id="sellerAddress" class="rich-editable multiline" contenteditable="true" data-sync="seller-address">Plot No.44 Survey No.25/3/2, Sanwer Main Road Sanwer Main Choraha , Sanwer , Indore (453551)</div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="sellerGST">GSTIN NO</label>
+                                <input type="text" id="sellerGST" value="23CAEPR5751F1ZQ" data-sync="seller-gst">
+                            </div>
+                            <div class="input-group">
+                                <label for="sellerState">State Name</label>
+                                <select id="sellerState" class="state-selector" data-target="sellerStateCode">
+                                    <option value="">Select State</option>
+                                    <option value="01">Jammu & Kashmir</option>
+                                    <option value="02">Himachal Pradesh</option>
+                                    <option value="03">Punjab</option>
+                                    <option value="04">Chandigarh</option>
+                                    <option value="05">Uttarakhand</option>
+                                    <option value="06">Haryana</option>
+                                    <option value="07">Delhi</option>
+                                    <option value="08">Rajasthan</option>
+                                    <option value="09">Uttar Pradesh</option>
+                                    <option value="10">Bihar</option>
+                                    <option value="11">Sikkim</option>
+                                    <option value="12">Arunachal Pradesh</option>
+                                    <option value="13">Nagaland</option>
+                                    <option value="14">Manipur</option>
+                                    <option value="15">Mizoram</option>
+                                    <option value="16">Tripura</option>
+                                    <option value="17">Meghalaya</option>
+                                    <option value="18">Assam</option>
+                                    <option value="19">West Bengal</option>
+                                    <option value="20">Jharkhand</option>
+                                    <option value="21">Odisha</option>
+                                    <option value="22">Chhattisgarh</option>
+                                    <option value="23" selected>Madhya Pradesh</option>
+                                    <option value="24">Gujarat</option>
+                                    <option value="25">Daman & Diu</option>
+                                    <option value="26">Dadra & Nagar Haveli</option>
+                                    <option value="27">Maharashtra</option>
+                                    <option value="29">Karnataka</option>
+                                    <option value="30">Goa</option>
+                                    <option value="31">Lakshadweep</option>
+                                    <option value="32">Kerala</option>
+                                    <option value="33">Tamil Nadu</option>
+                                    <option value="34">Puducherry</option>
+                                    <option value="35">Andaman & Nicobar Islands</option>
+                                    <option value="36">Telangana</option>
+                                    <option value="37">Andhra Pradesh</option>
+                                    <option value="38">Ladakh</option>
+                                    <option value="97">Other Territory</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="sellerStateCode">State Code</label>
+                                <input type="text" id="sellerStateCode" value="23" data-sync="seller-state">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Invoice & Transport Info -->
+                    <section class="card">
+                        <h2 class="section-title">Invoice & Transport</h2>
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="invoiceNo">Invoice No </label>
+                                <input type="text" id="invoiceNo" value="AC/25-26/28" data-sync="invoice-no">
+                            </div>
+                            <div class="input-group">
+                                <label for="invoiceDate">Invoice Date</label>
+                                <input type="date" id="invoiceDate" data-sync="invoice-date">
+                            </div>
+                        </div>
+                        <div class="grid-3">
+                            <div class="input-group" style="grid-column: span 2;">
+                                <label for="transportName">Transport Name</label>
+                                <input type="text" id="transportName" value="Sarpanch Freight"
+                                    data-sync="transport-name">
+                            </div>
+                            <div class="input-group">
+                                <label for="lorryNo">Lorry no</label>
+                                <input type="text" id="lorryNo" value="RJ 25 GA 8025" data-sync="lorry-no">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="biltyNo">Bilty No</label>
+                            <input type="text" id="biltyNo" value="6842" data-sync="bilty-no">
+                        </div>
+                    </section>
+
+                    <!-- Buyer Details -->
+                    <section class="card">
+                        <div class="flex" style="align-items: center; margin-bottom: 0.5rem;">
+                            <h2 class="section-title" style="margin-bottom: 0; border-bottom: none;">Bill To / Ship To
+                            </h2>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="sameAsBillTo" checked>
+                                <label for="sameAsBillTo">Same as Bill</label>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="left-col">
+                                <div class="input-group">
+                                    <label for="buyerName">Bill To Name</label>
+                                    <input type="text" id="buyerName" value="PUNEET OVERSEAS INC."
+                                        data-sync="bill-to-name">
+                                </div>
+                                <div class="input-group">
+                                    <label for="buyerAddress">Bill To Address</label>
+                                    <div id="buyerAddress" class="rich-editable multiline" contenteditable="true" data-sync="bill-to-address">PD/117 B, PD Block Pithampura North West Delhi (110088)</div>
+                                </div>
+                            </div>
+                            <div class="right-col">
+                                <div class="input-group">
+                                    <label for="buyerGST">GSTIN NO</label>
+                                    <input type="text" id="buyerGST" value="07AHCPK3887C1ZE" data-sync="bill-to-gst">
+                                </div>
+                                <div class="input-group">
+                                    <label for="buyerState">State Name</label>
+                                    <select id="buyerState" class="state-selector" data-target="buyerStateCode">
+                                        <option value="">Select State</option>
+                                        <option value="01">Jammu & Kashmir</option>
+                                        <option value="02">Himachal Pradesh</option>
+                                        <option value="03">Punjab</option>
+                                        <option value="04">Chandigarh</option>
+                                        <option value="05">Uttarakhand</option>
+                                        <option value="06">Haryana</option>
+                                        <option value="07" selected>Delhi</option>
+                                        <option value="08">Rajasthan</option>
+                                        <option value="09">Uttar Pradesh</option>
+                                        <option value="10">Bihar</option>
+                                        <option value="11">Sikkim</option>
+                                        <option value="12">Arunachal Pradesh</option>
+                                        <option value="13">Nagaland</option>
+                                        <option value="14">Manipur</option>
+                                        <option value="15">Mizoram</option>
+                                        <option value="16">Tripura</option>
+                                        <option value="17">Meghalaya</option>
+                                        <option value="18">Assam</option>
+                                        <option value="19">West Bengal</option>
+                                        <option value="20">Jharkhand</option>
+                                        <option value="21">Odisha</option>
+                                        <option value="22">Chhattisgarh</option>
+                                        <option value="23">Madhya Pradesh</option>
+                                        <option value="24">Gujarat</option>
+                                        <option value="25">Daman & Diu</option>
+                                        <option value="26">Dadra & Nagar Haveli</option>
+                                        <option value="27">Maharashtra</option>
+                                        <option value="29">Karnataka</option>
+                                        <option value="30">Goa</option>
+                                        <option value="31">Lakshadweep</option>
+                                        <option value="32">Kerala</option>
+                                        <option value="33">Tamil Nadu</option>
+                                        <option value="34">Puducherry</option>
+                                        <option value="35">Andaman & Nicobar Islands</option>
+                                        <option value="36">Telangana</option>
+                                        <option value="37">Andhra Pradesh</option>
+                                        <option value="38">Ladakh</option>
+                                        <option value="97">Other Territory</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="buyerStateCode">State Code</label>
+                                    <input type="text" id="buyerStateCode" value="07" data-sync="bill-to-state">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="shipToFields" class="hidden">
+                            <hr class="divider" style="margin: 0.75rem 0;">
+                            <div class="grid-2">
+                                <div class="left-col">
+                                    <div class="input-group">
+                                        <label for="shipToName">Ship To Name</label>
+                                        <input type="text" id="shipToName" data-sync="ship-to-name">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="shipToAddress">Ship To Address</label>
+                                        <div id="shipToAddress" class="rich-editable multiline" contenteditable="true" data-sync="ship-to-address"></div>
+                                    </div>
+                                </div>
+                                <div class="right-col">
+                                    <div class="input-group">
+                                        <label for="shipToGST">GSTIN NO</label>
+                                        <input type="text" id="shipToGST" data-sync="ship-to-gst">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="shipToState">State Name</label>
+                                        <select id="shipToState" class="state-selector" data-target="shipToStateCode">
+                                            <option value="">Select State</option>
+                                            <option value="01">Jammu & Kashmir</option>
+                                            <option value="02">Himachal Pradesh</option>
+                                            <option value="03">Punjab</option>
+                                            <option value="04">Chandigarh</option>
+                                            <option value="05">Uttarakhand</option>
+                                            <option value="06">Haryana</option>
+                                            <option value="07">Delhi</option>
+                                            <option value="08">Rajasthan</option>
+                                            <option value="09">Uttar Pradesh</option>
+                                            <option value="10">Bihar</option>
+                                            <option value="11">Sikkim</option>
+                                            <option value="12">Arunachal Pradesh</option>
+                                            <option value="13">Nagaland</option>
+                                            <option value="14">Manipur</option>
+                                            <option value="15">Mizoram</option>
+                                            <option value="16">Tripura</option>
+                                            <option value="17">Meghalaya</option>
+                                            <option value="18">Assam</option>
+                                            <option value="19">West Bengal</option>
+                                            <option value="20">Jharkhand</option>
+                                            <option value="21">Odisha</option>
+                                            <option value="22">Chhattisgarh</option>
+                                            <option value="23">Madhya Pradesh</option>
+                                            <option value="24">Gujarat</option>
+                                            <option value="25">Daman & Diu</option>
+                                            <option value="26">Dadra & Nagar Haveli</option>
+                                            <option value="27">Maharashtra</option>
+                                            <option value="29">Karnataka</option>
+                                            <option value="30">Goa</option>
+                                            <option value="31">Lakshadweep</option>
+                                            <option value="32">Kerala</option>
+                                            <option value="33">Tamil Nadu</option>
+                                            <option value="34">Puducherry</option>
+                                            <option value="35">Andaman & Nicobar Islands</option>
+                                            <option value="36">Telangana</option>
+                                            <option value="37">Andhra Pradesh</option>
+                                            <option value="38">Ladakh</option>
+                                            <option value="97">Other Territory</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="shipToStateCode">State Code</label>
+                                        <input type="text" id="shipToStateCode" data-sync="ship-to-state">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Items Section -->
+                    <section class="card table-card">
+                        <h2 class="section-title">Descriptions of Goods</h2>
+                        <div class="table-wrapper">
+                            <table id="productTable">
+                                <thead>
+                                    <tr>
+                                        <th width="30px">S.N</th>
+                                        <th>Description</th>
+                                        <th width="80px">HSN/SAC</th>
+                                        <th width="60px">Qty</th>
+                                        <th width="60px">Rate</th>
+                                        <th width="30px"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productBody">
+                                    <!-- Dynamic rows here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" id="addRow" class="btn btn-secondary btn-sm" style="margin-top: 0.5rem;">+
+                            Add Item</button>
+                    </section>
+
+                    <!-- Multi-Section Row for Bank & Tax -->
+                    <div class="grid-2">
+                        <!-- Bank Details -->
+                        <section class="card" style="margin-bottom: 0;">
+                            <h2 class="section-title">Bank Details</h2>
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label for="bankHolder">A/C HOLDER’S NAME</label>
+                                    <input type="text" id="bankHolder" value="BILLIX" data-sync="bank-holder">
+                                </div>
+                                <div class="input-group">
+                                    <label for="bankName">BANK NAME</label>
+                                    <input type="text" id="bankName" value="BANK OF BARODA" data-sync="bank-name">
+                                </div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label for="bankAccount">A/C NO.</label>
+                                    <input type="text" id="bankAccount" value="05000500000161" data-sync="bank-acc">
+                                </div>
+                                <div class="input-group">
+                                    <label for="bankIFSC">IFSC CODE</label>
+                                    <input type="text" id="bankIFSC" value="BARB0INDIND" data-sync="bank-ifsc">
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Tax Configuration -->
+                        <section class="card" style="margin-bottom: 0;">
+                            <h2 class="section-title">Taxes (%)</h2>
+                            <div class="input-group">
+                                <label for="cgst">CGST %</label>
+                                <input type="number" id="cgst" value="0" step="0.1">
+                            </div>
+                            <div class="input-group">
+                                <label for="sgst">SGST %</label>
+                                <input type="number" id="sgst" value="0" step="0.1">
+                            </div>
+                            <div class="input-group">
+                                <label for="igst">IGST %</label>
+                                <input type="number" id="igst" value="18" step="0.1">
+                            </div>
+                        </section>
+                    </div>
+                </form>
+            </aside>
+
+            <!-- Right Pane: Professional Preview -->
+            <main class="preview-pane">
+                <div class="preview-controls">
+                    <div class="copy-type">
+                        <label>Copy Type:</label>
+                        <select id="copySelector">
+                            <option value="ORIGINAL FOR RECIPIENT">Original</option>
+                            <option value="DUPLICATE FOR TRANSPORTER">Duplicate</option>
+                            <option value="SUPPLIER COPY">Supplier Copy</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="invoicePreview" class="invoice-container">
+                    <div class="invoice-content">
+                        <!-- The Professional Grid Layout matching the image -->
+                        <div class="invoice-header">
+                            <h2 class="invoice-title">Invoice</h2>
+                            <span class="copy-indicator" id="copyText">(ORIGINAL FOR RECIPIENT)</span>
+                        </div>
+
+                        <div class="invoice-grid">
+                            <!-- Row 1: Seller & Invoice Info -->
+                            <div class="grid-row-1">
+                                <div class="col seller-section border-right">
+                                    <p class="label">Seller</p>
+                                    <p class="company-name-preview" id="preview-seller-name">BILLIX</p>
+                                    <p class="seller-details">
+                                        Address : <span id="preview-seller-address">Plot No.44 Survey No.25/3/2, Sanwer
+                                            Main
+                                            Road Sanwer Main Choraha , Sanwer , Indore (453551)</span><br>
+                                        GSTIN NO : <span id="preview-seller-gst">23CAEPR5751F1ZQ</span><br>
+                                        State Code : <span id="preview-seller-state">23 MADHYAPRADESH</span><br><br>
+                                        <b>Dispatch From : </b><span id="preview-dispatch-from">Khalapur Dist. Raigad
+                                            Maharashtra (410203)</span>
+                                    </p>
+                                </div>
+                                <div class="col invoice-info">
+                                    <div class="info-row border-bottom flex">
+                                        <span class="label-inline">Invoice No :</span>
+                                        <span class="value-inline" id="preview-invoice-no">AC/25-26/28</span>
+                                    </div>
+                                    <div class="info-row border-bottom flex">
+                                        <span class="label-inline">Invoice Date</span>
+                                        <span class="value-inline" id="preview-invoice-date">24/03/2026</span>
+                                    </div>
+                                    <div class="transport-details">
+                                        <p class="label">Transport Details :</p>
+                                        <p class="details-content">
+                                            Name : <span id="preview-transport-name">Sarpanch Freight</span><br>
+                                            Bilty No : <span id="preview-bilty-no">6842</span><br>
+                                            Lorry no : <span id="preview-lorry-no">RJ 25 GA 8025</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Bill To & Ship To -->
+                            <div class="grid-row-2 border-top">
+                                <div class="col border-right">
+                                    <p class="label">Bill To</p>
+                                    <p class="details-content">
+                                        Name : <span id="preview-bill-to-name">PUNEET OVERSEAS INC.</span><br><br>
+                                        Address : <span id="preview-bill-to-address">PD/117 B, PD Block Pithampura North
+                                            West
+                                            Delhi (110088)</span><br><br>
+                                        GSTIN NO : <span id="preview-bill-to-gst">07AHCPK3887C1ZE</span><br><br>
+                                        State Code : <span id="preview-bill-to-state">07</span>
+                                    </p>
+                                </div>
+                                <div class="col">
+                                    <p class="label">Ship To</p>
+                                    <p class="details-content">
+                                        Name : <span id="preview-ship-to-name">PUNEET OVERSEAS INC.</span><br>
+                                        Address : <span id="preview-ship-to-address">Plot No. 3,4 Khasra no. 35/2 Ground
+                                            Floor
+                                            Rizak Ram Park Rani Khera New Delhi North West Delhi (110081)</span><br>
+                                        GSTIN NO : <span id="preview-ship-to-gst">07AHCPK3887C1ZE</span><br>
+                                        State Code : <span id="preview-ship-to-state">07</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Product Table -->
+                            <div class="grid-row-3 border-top">
+                                <table class="preview-table">
+                                    <thead>
+                                        <tr>
+                                            <th width="5%">S.N.O</th>
+                                            <th width="35%">Descriptions of Goods</th>
+                                            <th width="15%">HSN/SAC</th>
+                                            <th width="10%">QTY</th>
+                                            <th width="15%">RATE</th>
+                                            <th width="20%">AMOUNT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="preview-product-body">
+                                        <!-- Dynamic product rows -->
+                                        <tr>
+                                            <td class="center">1.</td>
+                                            <td>MS SKULL</td>
+                                            <td class="center">72044900</td>
+                                            <td class="center">42,580<br>KGS</td>
+                                            <td class="center">21 /-<br>Per KGS</td>
+                                            <td class="right">8,94,180.00</td>
+                                        </tr>
+                                        <!-- Empty space filler rows -->
+                                        <tr class="spacer-row">
+                                            <td colspan="6"></td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="5" class="right label-total">TOTAL</td>
+                                            <td class="right" id="preview-subtotal">8,94,180.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5" class="right label-total">CGST <span
+                                                    id="preview-cgst-rate">9</span>
+                                                %</td>
+                                            <td class="right" id="preview-cgst-val">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5" class="right label-total">SGST <span
+                                                    id="preview-sgst-rate">9</span>
+                                                %</td>
+                                            <td class="right" id="preview-sgst-val">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="5" class="right label-total">IGST <span
+                                                    id="preview-igst-rate">18</span> %</td>
+                                            <td class="right" id="preview-igst-val">1,60,952.40</td>
+                                        </tr>
+                                        <tr class="gross-total-row">
+                                            <td colspan="5" class="right label-total">GROSS TOTAL</td>
+                                            <td class="right" id="preview-gross-total">10,55,132.40</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <!-- Row 4: Amount in words -->
+                            <div class="grid-row-4 border-top">
+                                <p class="amount-words-text">
+                                    Amount in Words : <span id="preview-amount-words">Ten Lakh Fifty Five Thousand One
+                                        Hundred
+                                        Thirty Two And Paise Forty Only</span>
+                                </p>
+                            </div>
+
+                            <!-- Row 5: Bank Details & Signature -->
+                            <div class="grid-row-5 border-top">
+                                <div class="col bank-details-preview border-right">
+                                    <p class="label">BANK DETAILS</p>
+                                    <p class="bank-info">
+                                        A/C HOLDER’S NAME : <span id="p-bank-holder">BILLIX</span><br>
+                                        BANK NAME : <span id="p-bank-name">BANK OF BARODA</span><br>
+                                        A/C NO. : <span id="p-bank-acc">05000500000161</span><br>
+                                        IFSC CODE : <span id="p-bank-ifsc">BARB0INDIND</span><br>
+                                        ADDRESS : <span id="p-bank-address">I.E. INDORE BRANCH</span>
+                                    </p>
+                                </div>
+                                <div class="col signature-section">
+                                    <p class="for-company">FOR BILLIX</p>
+                                    <div class="signature-space"></div>
+                                    <p class="auth-sign">Authorized Signatory</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Note -->
+                        <div class="invoice-footer-note">
+                            <p>NOTE : ALL SUBJECT TO INDORE JURISDICTION</p>
+                        </div>
+                    </div>
+            </main>
+        </div> <!-- workspace -->
+    </div> <!-- app-container -->
+
+    <script src="script.js"></script>
+</body>
+
+</html>
