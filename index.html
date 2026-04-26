@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avneesh Corporation - Professional Invoice Generator</title>
+    <title>Billix - Professional Invoice Generator</title>
     <!-- Google Fonts -->
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;800&display=swap"
@@ -16,14 +16,43 @@
 </head>
 
 <body>
+    <!-- Dynamic Floating Background -->
+    <ul class="dynamic-background">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+    </ul>
+    
     <div class="app-container">
         <!-- Header Section -->
         <header class="app-header">
-            <div class="logo-container">
-                <h1 class="company-name">AVNEESH CORPORATION</h1>
-                <p class="tagline">Professional Invoice Generator</p>
+            <div class="logo-container" style="display: flex; align-items: center; gap: 0.8rem;">
+                <svg class="company-logo" width="55" height="55" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Base Slot -->
+                    <rect x="25" y="80" width="55" height="8" rx="4" fill="#013A0E"/>
+                    <!-- Back Paper (Darkest) -->
+                    <path d="M22 35 Q28 65 32 80 L62 80 Q59 55 64 32 Z" fill="#116D08"/>
+                    <!-- Middle Paper -->
+                    <path d="M33 32 Q36 60 38 80 L72 80 Q73 55 84 38 Z" fill="#299E13"/>
+                    <!-- Front Paper (Lightest, with notches) -->
+                    <path d="M43 38 C43 38 46 45 52 46 C57 47 62 44 62 44 L87 54 C87 54 83 60 81 65 C79 71 85 75 85 75 Q75 80 72 82 L42 82 Q48 65 43 38 Z" fill="#A8EB66"/>
+                </svg>
+                <div>
+                    <h1 class="company-name" style="color: var(--primary);">BILLIX</h1>
+                    <p class="tagline" style="color: var(--primary-light); font-size: 0.85rem; font-weight: 600;">Since 2026</p>
+                </div>
             </div>
-            <div class="action-buttons">
+            <div class="action-buttons" style="display: flex; gap: 10px; align-items: center;">
+                <button id="darkModeBtn" type="button" class="btn btn-secondary" style="padding: 0.5rem; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                    <span id="darkModeIcon" style="font-size: 1.1rem; line-height: 1;">🌙</span>
+                </button>
                 <div class="dropdown">
                     <button id="downloadBtn" type="button" class="btn btn-primary dropdown-toggle">
                         Download PDF <span class="chevron">▼</span>
@@ -51,7 +80,7 @@
                         <div class="grid-2">
                             <div class="input-group">
                                 <label for="sellerName">Company Name</label>
-                                <input type="text" id="sellerName" value="AVNEESH CORPORATION" data-sync="seller-name">
+                                <input type="text" id="sellerName" value="BILLIX" data-sync="seller-name">
                             </div>
                             <div class="input-group">
                                 <label for="dispatchFrom">Dispatch From</label>
@@ -217,7 +246,7 @@
                                 </div>
                                 <div class="input-group">
                                     <label for="bankHolder">HOLDER</label>
-                                    <input type="text" id="bankHolder" value="AVNEESH CORPORATION"
+                                    <input type="text" id="bankHolder" value="BILLIX"
                                         data-sync="bank-holder">
                                 </div>
                             </div>
@@ -269,7 +298,7 @@
                             <div class="grid-row-1">
                                 <div class="col seller-section border-right">
                                     <p class="label">Seller</p>
-                                    <p class="company-name-preview" id="preview-seller-name">AVNEESH CORPORATION</p>
+                                    <p class="company-name-preview" id="preview-seller-name">BILLIX</p>
                                     <p class="seller-details">
                                         Address : <span id="preview-seller-address">Plot No.44 Survey No.25/3/2, Sanwer
                                             Main
@@ -401,12 +430,12 @@
                                         BANK NAME : <span id="p-bank-name">BANK OF BARODA</span><br>
                                         ACCOUNT NO: <span id="p-bank-acc">05000500000161</span> IFSC CODE : <span
                                             id="p-bank-ifsc">BARB0INDIND</span><br>
-                                        ACCOUNT HOLDER : <span id="p-bank-holder">AVNEESH CORPORATION</span><br>
+                                        ACCOUNT HOLDER : <span id="p-bank-holder">BILLIX</span><br>
                                         ADDRESS : <span id="p-bank-address">I.E. INDORE BRANCH</span>
                                     </p>
                                 </div>
                                 <div class="col signature-section">
-                                    <p class="for-company">FOR AVNEESH CORPORATION</p>
+                                    <p class="for-company">FOR BILLIX</p>
                                     <div class="signature-space"></div>
                                     <p class="auth-sign">Authorized Signatory</p>
                                 </div>
