@@ -8,6 +8,8 @@ const sameAsBillTo = document.getElementById('sameAsBillTo');
 const shipToFields = document.getElementById('shipToFields');
 const invoiceForm = document.getElementById('invoiceForm');
 const copySelector = document.getElementById('copySelector');
+const darkModeBtn = document.getElementById('darkModeBtn');
+const darkModeIcon = document.getElementById('darkModeIcon');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,7 +26,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial sync of all default values
     syncAllToPreview();
+
+    // Check Dark Mode Preference
+    initDarkMode();
 });
+
+function initDarkMode() {
+    const isDark = localStorage.getItem('billix-theme') === 'dark';
+    if (isDark) {
+        document.body.classList.add('dark-mode');
+        darkModeIcon.textContent = '☀️';
+    }
+}
 
 function setupEventListeners() {
     // Checkbox for Ship To
@@ -39,6 +52,14 @@ function setupEventListeners() {
         } else {
             shipToFields.classList.remove('hidden');
         }
+    });
+
+    // Dark Mode Toggle
+    darkModeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        darkModeIcon.textContent = isDark ? '☀️' : '🌙';
+        localStorage.setItem('billix-theme', isDark ? 'dark' : 'light');
     });
 
     // Copy Type Selector
@@ -227,7 +248,7 @@ function calculateTotals(subTotalValue) {
 
     document.getElementById('preview-gross-total').textContent = formatNumber(grossTotal);
 
-    const words = numberToWords(Math.round(grossTotal));
+    const words = numberToWords(Math.round(grossTotal * 100) / 100);
     document.getElementById('preview-amount-words').textContent = words ? (words + " ONLY") : "ZERO RUPEES ONLY";
 }
 
@@ -254,13 +275,27 @@ function numberToWords(num) {
         return a[Math.floor(n / 100)] + 'HUNDRED ' + convert_less_than_thousand(n % 100) + suffix;
     };
 
-    let str = '';
-    str += convert_with_suffix(Math.floor(num / 10000000), 'CRORE ');
-    str += convert_with_suffix(Math.floor((num / 100000) % 100), 'LAKH ');
-    str += convert_with_suffix(Math.floor((num / 1000) % 100), 'THOUSAND ');
-    str += convert_with_suffix(num % 1000, '');
+    const integerPart = Math.floor(num);
+    const decimalPart = Math.round((num - integerPart) * 100);
 
-    return str.trim();
+    let str = '';
+    str += convert_with_suffix(Math.floor(integerPart / 10000000), 'CRORE ');
+    str += convert_with_suffix(Math.floor((integerPart / 100000) % 100), 'LAKH ');
+    str += convert_with_suffix(Math.floor((integerPart / 1000) % 100), 'THOUSAND ');
+    str += convert_with_suffix(integerPart % 1000, '');
+
+    let result = str.trim();
+
+    if (decimalPart > 0) {
+        const paiseStr = convert_with_suffix(decimalPart, '').trim();
+        if (result !== '') {
+            result += ' AND ' + paiseStr + ' PAISE';
+        } else {
+            result = paiseStr + ' PAISE';
+        }
+    }
+
+    return result;
 }
 
 // PDF Generation Logic
@@ -296,11 +331,11 @@ function renderPDFPage(doc, copyTitle) {
 
     // Helper functions
     const line = (x1, y1, x2, y2) => {
-        doc.setDrawColor(30, 64, 175);
+        doc.setDrawColor(108, 180, 44);
         doc.line(x1, y1, x2, y2);
     };
     const rect = (x, y, w, h) => {
-        doc.setDrawColor(30, 64, 175);
+        doc.setDrawColor(108, 180, 44);
         doc.setLineWidth(0.3);
         doc.rect(x, y, w, h);
     };
@@ -308,7 +343,7 @@ function renderPDFPage(doc, copyTitle) {
     // Header
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
-    doc.setTextColor(30, 64, 175);
+    doc.setTextColor(108, 180, 44);
     doc.text("INVOICE", 105, startY, { align: 'center' });
 
     doc.setFontSize(8);
@@ -322,7 +357,7 @@ function renderPDFPage(doc, copyTitle) {
     line(margin, startY + 55, margin + width, startY + 55);
     line(115, startY + 5, 115, startY + 55);
 
-    doc.setTextColor(30, 64, 175);
+    doc.setTextColor(108, 180, 44);
     doc.setFontSize(9);
     doc.text("SELLER", margin + 2, startY + 10);
 
@@ -344,7 +379,7 @@ function renderPDFPage(doc, copyTitle) {
 
     // Invoice Info Area
     doc.setFontSize(9);
-    doc.setTextColor(30, 64, 175);
+    doc.setTextColor(108, 180, 44);
     doc.text("INVOICE DETAILS", 117, startY + 10);
     doc.setTextColor(0);
     doc.setFont('helvetica', 'normal');
@@ -353,7 +388,7 @@ function renderPDFPage(doc, copyTitle) {
     doc.text("Date       : " + formatDate(new Date(document.getElementById('invoiceDate').value)), 117, startY + 21);
 
     line(115, startY + 26, margin + width, startY + 26);
-    doc.setTextColor(30, 64, 175);
+    doc.setTextColor(108, 180, 44);
     doc.text("TRANSPORT DETAILS", 117, startY + 31);
     doc.setTextColor(0);
     doc.text("Transport  : " + document.getElementById('transportName').value, 117, startY + 36);
@@ -364,7 +399,7 @@ function renderPDFPage(doc, copyTitle) {
     line(margin, startY + 95, margin + width, startY + 95);
     line(115, startY + 55, 115, startY + 95);
 
-    doc.setTextColor(30, 64, 175);
+    doc.setTextColor(108, 180, 44);
     doc.setFont('helvetica', 'bold');
     doc.text("BILL TO (RECIPIENT)", margin + 2, startY + 60);
     doc.setTextColor(0);
@@ -381,7 +416,7 @@ function renderPDFPage(doc, copyTitle) {
     const sGST = isSame ? document.getElementById('buyerGST').value : document.getElementById('shipToGST').value;
     const sState = isSame ? document.getElementById('buyerStateCode').value : document.getElementById('shipToStateCode').value;
 
-    doc.setTextColor(30, 64, 175);
+    doc.setTextColor(108, 180, 44);
     doc.setFont('helvetica', 'bold');
     doc.text("SHIP TO (CONSIGNEE)", 117, startY + 60);
     doc.setTextColor(0);
@@ -414,8 +449,8 @@ function renderPDFPage(doc, copyTitle) {
         startY: startY + 95,
         margin: { left: margin, right: margin },
         theme: 'grid',
-        styles: { fontSize: 8, font: 'helvetica', cellPadding: 2, lineColor: [30, 64, 175], lineWidth: 0.1 },
-        headStyles: { fillColor: [30, 64, 175], textColor: 255 },
+        styles: { fontSize: 8, font: 'helvetica', cellPadding: 2, lineColor: [108, 180, 44], lineWidth: 0.1 },
+        headStyles: { fillColor: [108, 180, 44], textColor: 255 },
         columnStyles: {
             0: { width: 10, halign: 'center' },
             2: { width: 25, halign: 'center' },
@@ -449,7 +484,7 @@ function renderPDFPage(doc, copyTitle) {
 
     // Grand Total Row
     const grandY = totalY + 28;
-    doc.setFillColor(30, 64, 175);
+    doc.setFillColor(108, 180, 44);
     doc.rect(150, grandY, 50, 9, 'F');
     doc.setTextColor(255);
     doc.text("TOTAL AMOUNT", 153, grandY + 6);
@@ -469,7 +504,7 @@ function renderPDFPage(doc, copyTitle) {
     line(115, bottomBoxY, 115, startY + 270);
 
     doc.setFontSize(9);
-    doc.setTextColor(30, 64, 175);
+    doc.setTextColor(108, 180, 44);
     doc.text("BANK DETAILS", margin + 2, bottomBoxY + 6);
 
     doc.setTextColor(0);
@@ -480,9 +515,9 @@ function renderPDFPage(doc, copyTitle) {
     doc.text("IFSC Code : " + document.getElementById('bankIFSC').value, margin + 2, bottomBoxY + 22);
     doc.text("Holder    : " + document.getElementById('bankHolder').value, margin + 2, bottomBoxY + 27);
 
-    doc.setTextColor(30, 64, 175);
+    doc.setTextColor(108, 180, 44);
     doc.setFont('helvetica', 'bold');
-    doc.text("FOR AVNEESH CORPORATION", 157, bottomBoxY + 6, { align: 'center' });
+    doc.text("FOR BILLIX", 157, bottomBoxY + 6, { align: 'center' });
     doc.setTextColor(0);
     doc.setFontSize(7);
     doc.text("Authorized Signatory", 157, startY + 265, { align: 'center' });
